@@ -82,6 +82,20 @@
   Fill them out with the right functional requirements.
 -->
 
+### Constitution Constraints *(mandatory)*
+
+<!--
+  ACTION REQUIRED: Translate constitution rules into concrete constraints for
+  this feature (privacy, federation, encryption, location precision, and
+  operator boundaries).
+-->
+
+- **CC-001**: Feature MUST preserve user-owned keys with no escrow/recovery.
+- **CC-002**: Feature MUST keep content end-to-end encrypted; infra cannot decrypt.
+- **CC-003**: Feature MUST remain compatible with federation and operator choice.
+- **CC-004**: Feature MUST NOT exceed geohash level 6 precision or store movement history.
+- **CC-005**: Cost-imposing actions MUST include proportional cost controls.
+
 ### Functional Requirements
 
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]

@@ -31,7 +31,13 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] Identity and key handling are user-owned; no key escrow or recovery.
+- [ ] All message/call content is end-to-end encrypted; infrastructure cannot decrypt.
+- [ ] Federation and operator choice are preserved; no centralized control assumptions.
+- [ ] System behavior supports conversation, not enforcement of real-world actions.
+- [ ] Cost-imposing actions include proportional cost controls (PoW or equivalent).
+- [ ] Location handling respects geohash level 6 max precision and no movement history.
+- [ ] Sidecar fail-closed behavior and policy enforcement are defined where applicable.
 
 ## Project Structure
 
