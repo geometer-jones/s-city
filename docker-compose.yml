@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:18.1
+    container_name: s-city-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-s_city}"
+      POSTGRES_USER: "${POSTGRES_USER:-s_city}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-s_city}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-s_city} -d ${POSTGRES_DB:-s_city}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  relay:
+    image: golang:1.25
+    container_name: s-city-relay
+    restart: unless-stopped
+    working_dir: /app/relay
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER:-s_city}:${POSTGRES_PASSWORD:-s_city}@postgres:5432/${POSTGRES_DB:-s_city}?sslmode=disable"
+      RELAY_PRIVKEY: "${RELAY_PRIVKEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}"
+      HTTP_ADDR: "${HTTP_ADDR:-:8080}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      RATE_LIMIT_BURST: "${RATE_LIMIT_BURST:-30}"
+      RATE_LIMIT_PER_MIN: "${RATE_LIMIT_PER_MIN:-120}"
+      MAX_EVENT_SKEW_SECONDS: "${MAX_EVENT_SKEW_SECONDS:-300}"
+    volumes:
+      - ./:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    command: sh -c "go run ./cmd/relay"
+    ports:
+      - "${RELAY_PORT:-8080}:8080"
+
+volumes:
+  postgres-data:
+  go-mod-cache:
+  go-build-cache:

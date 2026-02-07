@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+
+# Editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Go build/test artifacts
+bin/
+dist/
+*.exe
+*.test
+*.out
+*.prof
+*.coverprofile
+coverage.out
+cover.out
+
+
+.codex/
+.cursor/
+.specify/

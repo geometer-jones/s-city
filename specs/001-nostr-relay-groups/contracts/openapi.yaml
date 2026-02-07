@@ -1,0 +1,326 @@
+openapi: 3.0.3
+info:
+  title: Nostr Relay with Group Projections
+  version: 1.0.0
+  description: REST read/write surfaces for relay events and projected group state.
+servers:
+  - url: https://relay.example.com
+paths:
+  /events:
+    post:
+      summary: Publish a Nostr event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '202':
+          description: Event accepted
+        '400':
+          description: Invalid event
+        '429':
+          description: Rate limited
+    get:
+      summary: Query events
+      parameters:
+        - in: query
+          name: author
+          schema: { type: string }
+        - in: query
+          name: kind
+          schema: { type: integer }
+        - in: query
+          name: since
+          schema: { type: integer }
+        - in: query
+          name: until
+          schema: { type: integer }
+        - in: query
+          name: tag
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 500 }
+      responses:
+        '200':
+          description: Event list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+  /events/{eventId}/delete:
+    post:
+      summary: Request deletion of an event
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteRequest'
+      responses:
+        '202':
+          description: Deletion accepted
+        '400':
+          description: Invalid delete request
+  /groups:
+    get:
+      summary: List group projections
+      parameters:
+        - in: query
+          name: geohash_prefix
+          schema: { type: string }
+        - in: query
+          name: is_private
+          schema: { type: boolean }
+        - in: query
+          name: is_vetted
+          schema: { type: boolean }
+        - in: query
+          name: updated_since
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 200 }
+      responses:
+        '200':
+          description: Group list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+  /groups/{groupId}:
+    get:
+      summary: Get a group projection
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '404':
+          description: Not found
+  /groups/{groupId}/members:
+    get:
+      summary: List group members
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Member list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupMember'
+  /groups/{groupId}/roles:
+    get:
+      summary: List group roles
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Role list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupRole'
+  /groups/{groupId}/bans:
+    get:
+      summary: List group bans
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Ban list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupBan'
+  /groups/{groupId}/invites:
+    get:
+      summary: List group invites
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Invite list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupInvite'
+  /groups/{groupId}/join-requests:
+    post:
+      summary: Submit a join request
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupJoinRequest'
+      responses:
+        '202':
+          description: Join request accepted
+        '403':
+          description: Join not allowed
+  /groups/{groupId}/join-requests/{pubkey}/approve:
+    post:
+      summary: Approve a join request
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: pubkey
+          required: true
+          schema: { type: string }
+      responses:
+        '202':
+          description: Join approved
+        '403':
+          description: Not authorized
+
+components:
+  schemas:
+    Event:
+      type: object
+      required: [id, pubkey, created_at, kind, tags, content, sig]
+      properties:
+        id: { type: string }
+        pubkey: { type: string }
+        created_at: { type: integer }
+        kind: { type: integer }
+        tags:
+          type: array
+          items:
+            type: array
+            items: { type: string }
+        content: { type: string }
+        sig: { type: string }
+    DeleteRequest:
+      type: object
+      required: [event_id, deleted_at, deleted_by]
+      properties:
+        event_id: { type: string }
+        deleted_at: { type: integer }
+        deleted_by: { type: string }
+        reason: { type: string }
+    Group:
+      type: object
+      required: [group_id, created_at, created_by, updated_at, updated_by]
+      properties:
+        group_id: { type: string }
+        name: { type: string }
+        about: { type: string }
+        picture: { type: string }
+        geohash: { type: string }
+        is_private: { type: boolean }
+        is_restricted: { type: boolean }
+        is_vetted: { type: boolean }
+        is_hidden: { type: boolean }
+        is_closed: { type: boolean }
+        created_at: { type: integer }
+        created_by: { type: string }
+        updated_at: { type: integer }
+        updated_by: { type: string }
+    GroupRole:
+      type: object
+      required: [group_id, role_name, permissions, created_at, created_by, updated_at, updated_by]
+      properties:
+        group_id: { type: string }
+        role_name: { type: string }
+        description: { type: string }
+        permissions:
+          type: array
+          items: { type: string }
+        created_at: { type: integer }
+        created_by: { type: string }
+        updated_at: { type: integer }
+        updated_by: { type: string }
+    GroupMember:
+      type: object
+      required: [group_id, pubkey, added_at, added_by]
+      properties:
+        group_id: { type: string }
+        pubkey: { type: string }
+        added_at: { type: integer }
+        added_by: { type: string }
+        role_name: { type: string }
+        promoted_at: { type: integer }
+        promoted_by: { type: string }
+    GroupBan:
+      type: object
+      required: [group_id, pubkey, reason, banned_at, banned_by]
+      properties:
+        group_id: { type: string }
+        pubkey: { type: string }
+        reason: { type: string }
+        banned_at: { type: integer }
+        banned_by: { type: string }
+        expires_at: { type: integer }
+    GroupInvite:
+      type: object
+      required: [group_id, code, created_at, created_by]
+      properties:
+        group_id: { type: string }
+        code: { type: string }
+        expires_at: { type: integer }
+        max_usage_count: { type: integer }
+        usage_count: { type: integer }
+        created_at: { type: integer }
+        created_by: { type: string }
+    GroupJoinRequest:
+      type: object
+      required: [group_id, pubkey, created_at]
+      properties:
+        group_id: { type: string }
+        pubkey: { type: string }
+        created_at: { type: integer }
+    GroupEvent:
+      type: object
+      required: [group_id, event_id, created_at]
+      properties:
+        group_id: { type: string }
+        event_id: { type: string }
+        created_at: { type: integer }
